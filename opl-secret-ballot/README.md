@@ -74,4 +74,9 @@ npm run dev
 
 Navigate to http://localhost:5173, and you should be able to create a new poll.
 
-You can use one of the deployed test accounts and associated private key with MetaMask.
+You can use one of the pre-funded test accounts and associated private key with MetaMask, 'Add a network manually' with these parameters:
+
+ * Network name: `Hardhat`
+ * New RPC URL: `http://127.0.0.1:8545/`
+ * Chain ID: `1337` (or leave blank to auto-detect)
+ * Currency symbol: `ETH` (or leave blank)

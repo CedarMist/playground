@@ -1,34 +1,43 @@
 <script setup lang="ts">
 import { ethers } from 'ethers';
-import { ref } from 'vue';
+import { ref, inject } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { staticBallotBox, useDAOv1 } from '../contracts';
 import { Network, useEthereumStore } from '../stores/ethereum';
 import type { Poll } from '../../../functions/api/types';
+import type { HeliaProvider } from '@/plugins/HeliaProviderPlugin';
 
 const router = useRouter();
 const eth = useEthereumStore();
 const dao = useDAOv1();
+const hp:HeliaProvider|undefined = inject('HeliaProvider');
 
 const pinBody = async (jwt: string, poll: Poll) => {
-  const res = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${jwt}`,
-    },
-    body: JSON.stringify({
-      pinataContent: poll,
-    }),
-  });
-  const resBody: any = await res.json();
-  if (res.status !== 200) throw new Error('failed to pin');
-  const resp = { ipfsHash: resBody.IpfsHash };
-  return new Response(JSON.stringify(resp), {
-    status: 201,
-    headers: { 'content-type': 'application/json' },
-  });
+  if( jwt ) {
+    // If VITE_PINATA_JWT is defined, use Pinata
+    const res = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${jwt}`,
+      },
+      body: JSON.stringify({
+        pinataContent: poll,
+      }),
+    });
+    const resBody: any = await res.json();
+    if (res.status !== 200) throw new Error('failed to pin');
+    return resBody.ipfsHash;
+  }
+  else {
+    // Otherwise use helia
+    if( hp ) {
+      const bytes = (new TextEncoder()).encode(JSON.stringify(poll));
+      const cid = await hp.fs.value.addBytes(bytes);
+      return cid.toString();
+    }
+  }
 };
 
 const errors = ref<string[]>([]);
@@ -82,10 +91,8 @@ async function doCreatePoll(): Promise<string> {
     },
   };
 
-  const res = await pinBody(import.meta.env.VITE_PINATA_JWT!, poll);
-  const resJson = await res.json();
-  if (res.status !== 201) throw new Error(resJson.error);
-  const ipfsHash = resJson.ipfsHash;
+  const ipfsHash = await pinBody(import.meta.env.VITE_PINATA_JWT!, poll);
+  console.log('Poll IPFS Hash', ipfsHash);
   const proposalParams = {
     ipfsHash,
     numChoices: choices.value.length,

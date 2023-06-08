@@ -17,11 +17,14 @@
     "format": "npm-run-all format:**"
   },
   "dependencies": {
+    "@helia/unixfs": "^1.3.0",
     "@metamask/detect-provider": "^2.0.0",
     "@metamask/jazzicon": "^2.0.0",
-    "@oasisprotocol/secret-ballot-backend": "workspace:^1.0.0",
+    "@multiformats/multiaddr": "^12.1.3",
     "@oasisprotocol/sapphire-paratime": "^1.0.13",
+    "@oasisprotocol/secret-ballot-backend": "workspace:^1.0.0",
     "ethers": "^5.7.2",
+    "helia": "^1.3.1",
     "pinia": "^2.0.28",
     "vue": "^3.2.45",
     "vue-content-loader": "^2.0.1",
